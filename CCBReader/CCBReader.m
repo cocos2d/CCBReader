@@ -1212,7 +1212,7 @@
 #ifdef CCB_ENABLE_UNZIP
 + (BOOL) unzipResources:(NSString*)resPath
 {
-    NSString* fullResPath = [[CCFileUtils sharedFileUtils] fullPathFromRelativePath:resPath];
+    NSString* fullResPath = [[CCFileUtils sharedFileUtils] fullPathForFilenameIgnoringResolutions:resPath];
     
     NSString* dstPath = [CCBReader ccbDirectoryPath];
     
