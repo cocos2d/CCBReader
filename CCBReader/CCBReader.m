@@ -1161,6 +1161,7 @@
 	NSMutableArray *array = [[[CCFileUtils sharedFileUtils] searchPath] mutableCopy];
 	[array addObject:searchPath];
 	[[CCFileUtils sharedFileUtils] setSearchPath:array];
+	[array release];
 }
 
 + (CCBReader*) reader
