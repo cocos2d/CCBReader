@@ -25,6 +25,7 @@
  */
 
 #import "CCControl.h"
+#import "ARCMacro.h"
 
 @interface CCControl ()
 /** 
@@ -32,12 +33,12 @@
  * target-actions pairs. For each CCButtonEvents a list of NSInvocation
  * (which contains the target-action pair) is linked.
  */
-@property (nonatomic, retain) NSMutableDictionary *dispatchTable;
+@property (nonatomic, strong) NSMutableDictionary *dispatchTable;
 /** 
  * Table of connection between the CCControlEvents and their associated
  * blocks. For each CCButtonEvents a list of blocks is linked.
  */
-@property (nonatomic, retain) NSMutableDictionary *dispatchBlockTable;
+@property (nonatomic, strong) NSMutableDictionary *dispatchBlockTable;
 
 /**
  * Adds a target and action for a particular event to an internal dispatch 
@@ -110,23 +111,29 @@
 @end
 
 @implementation CCControl
-@synthesize dispatchTable           = dispatchTable_;
-@synthesize dispatchBlockTable      = dispatchBlockTable_;
-@synthesize defaultTouchPriority    = defaultTouchPriority_;
-@synthesize state                   = state_;
-@synthesize enabled                 = enabled_;
-@synthesize selected                = selected_;
-@synthesize highlighted             = highlighted_;
-@synthesize opacity                 = opacity_;
-@synthesize color                   = color_;
-@synthesize opacityModifyRGB        = opacityModifyRGB_;
+@synthesize dispatchTable           = _dispatchTable;
+@synthesize dispatchBlockTable      = _dispatchBlockTable;
+@synthesize defaultTouchPriority    = _defaultTouchPriority;
+@synthesize state                   = _state;
+@synthesize enabled                 = _enabled;
+@synthesize selected                = _selected;
+@synthesize highlighted             = _highlighted;
+
+// CCRGBAProtocol (v2.1)
+@synthesize opacity                 = _opacity;
+@synthesize displayedOpacity        = _displayedOpacity;
+@synthesize color                   = _color;
+@synthesize displayedColor          = _displayedColor;
+@synthesize opacityModifyRGB        = _opacityModifyRGB;
+@synthesize cascadeColorEnabled     = _cascadeColorEnabled;
+@synthesize cascadeOpacityEnabled   = _cascadeOpacityEnabled;
 
 - (void)dealloc
 {
-    [dispatchBlockTable_    release];
-    [dispatchTable_         release];
+    SAFE_ARC_RELEASE(_dispatchBlockTable);
+    SAFE_ARC_RELEASE(_dispatchTable);
     
-    [super                  dealloc];
+    SAFE_ARC_SUPER_DEALLOC();
 }
 
 - (id)init
@@ -134,15 +141,25 @@
     if ((self = [super init]))
     {
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
+    #if COCOS2D_VERSION >= 0x00020100
+        // Enabled the touch event
+        self.touchEnabled           = YES;
+    #else
 		// Enabled the touch event
         self.isTouchEnabled         = YES;
+    #endif
 #elif __MAC_OS_X_VERSION_MAX_ALLOWED
+    #if COCOS2D_VERSION >= 0x00020100
         // Enabled the mouse event
-		self.mouseEnabled         = YES;
+		self.mouseEnabled           = YES;
+    #else
+        // Enabled the mouse event
+		self.isMouseEnabled         = YES;
+    #endif
 #endif
         
         // Initialise instance variables
-        state_                      = CCControlStateNormal;
+        _state                      = CCControlStateNormal;
         
         self.enabled                = YES;
         self.selected               = NO;
@@ -152,8 +169,8 @@
         self.defaultTouchPriority   = 1;
         
         // Initialise the tables
-        dispatchTable_              = [[NSMutableDictionary alloc] initWithCapacity:1];
-        dispatchBlockTable_         = [[NSMutableDictionary alloc] initWithCapacity:1];
+        _dispatchTable              = [[NSMutableDictionary alloc] initWithCapacity:1];
+        _dispatchBlockTable         = [[NSMutableDictionary alloc] initWithCapacity:1];
     }
     return self;
 }
@@ -162,7 +179,7 @@
 {
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
     CCTouchDispatcher * dispatcher  = [CCDirector sharedDirector].touchDispatcher;
-	[dispatcher addTargetedDelegate:self priority:defaultTouchPriority_ swallowsTouches:YES];
+	[dispatcher addTargetedDelegate:self priority:_defaultTouchPriority swallowsTouches:YES];
 #endif
 	[super onEnter];
 }
@@ -181,16 +198,16 @@
 
 - (NSInteger)mouseDelegatePriority
 {
-	return defaultTouchPriority_;
+	return _defaultTouchPriority;
 }
 
 #endif
 
-#pragma mark Properties
+#pragma mark CCRGBAProtocol
 
 - (void)setColor:(ccColor3B)color
 {
-    color_ = color;
+    _color = color;
     
     for (CCNode<CCRGBAProtocol> *child in self.children)
     {
@@ -200,7 +217,7 @@
 
 - (void)setOpacity:(GLubyte)opacity
 {
-    opacity_ = opacity;
+    _opacity = opacity;
     
     for (CCNode<CCRGBAProtocol> *child in self.children)
     {
@@ -210,7 +227,7 @@
 
 - (void)setOpacityModifyRGB:(BOOL)opacityModifyRGB
 {
-    opacityModifyRGB_ = opacityModifyRGB;
+    _opacityModifyRGB = opacityModifyRGB;
     
     for (CCNode<CCRGBAProtocol> *child in self.children)
     {
@@ -218,14 +235,55 @@
     }
 }
 
+#if COCOS2D_VERSION >= 0x00020100
+
+- (void)updateDisplayedOpacity:(GLubyte)parentOpacity
+{
+	_displayedOpacity = _realOpacity * parentOpacity/255.0;
+    
+    if (_cascadeOpacityEnabled)
+    {
+        id<CCRGBAProtocol> item;
+        CCARRAY_FOREACH(self.children, item)
+        {
+            if ([item conformsToProtocol:@protocol(CCRGBAProtocol)])
+            {
+                [item updateDisplayedOpacity:_displayedOpacity];
+            }
+        }
+    }
+}
+
+- (void)updateDisplayedColor:(ccColor3B)parentColor
+{
+	_displayedColor.r = _realColor.r * parentColor.r/255.0;
+	_displayedColor.g = _realColor.g * parentColor.g/255.0;
+	_displayedColor.b = _realColor.b * parentColor.b/255.0;
+    
+    if (_cascadeColorEnabled) {
+        id<CCRGBAProtocol> item;
+        CCARRAY_FOREACH(self.children, item)
+        {
+            if ([item conformsToProtocol:@protocol(CCRGBAProtocol)])
+            {
+                [item updateDisplayedColor:_displayedColor];
+            }
+        }
+    }
+}
+
+#endif
+
+#pragma mark Properties
+
 - (void)setEnabled:(BOOL)enabled
 {
-    enabled_        = enabled;
+    _enabled        = enabled;
     
-    if(enabled_) {
-        state_ = CCControlStateNormal;
+    if(_enabled) {
+        _state = CCControlStateNormal;
     } else {
-        state_ = CCControlStateDisabled;
+        _state = CCControlStateDisabled;
     }
     
     [self needsLayout];
@@ -233,24 +291,24 @@
 
 - (void)setSelected:(BOOL)selected
 {
-    selected_       = selected;
+    _selected       = selected;
     
     [self needsLayout];
 }
 
 - (void)setHighlighted:(BOOL)highlighted
 {
-    highlighted_    = highlighted;
+    _highlighted    = highlighted;
     
     [self needsLayout];
 }
 
-- (BOOL) hasVisibleParents
+- (BOOL)hasVisibleParents
 {
-    for( CCNode *c = self.parent; c != nil; c = c.parent )
-    {
-		if( !c.visible ) return NO;
-    }
+    for( CCNode *c = self.parent; c != nil; c = c.parent)
+		if(!c.visible)
+            return NO;
+
     return YES;
 }
 
@@ -273,7 +331,7 @@
             }
             
             // Call blocks
-            CCControlBlock block = [dispatchBlockTable_ objectForKey:[NSNumber numberWithUnsignedInteger:(1 << i)]];
+            CCControlBlock block = [_dispatchBlockTable objectForKey:[NSNumber numberWithUnsignedInteger:(1 << i)]];
             if (block)
             {
                 block (self, (1 << i));
@@ -308,6 +366,11 @@
     }
 }
 
+- (BOOL)isPointInside:(CGPoint)location
+{
+    return CGRectContainsPoint([self boundingBox], location);
+}
+
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 
 - (CGPoint)touchLocation:(UITouch *)touch
@@ -325,7 +388,7 @@
     touchLocation           = [[CCDirector sharedDirector] convertToGL:touchLocation];  // Convert the position to GL space
     touchLocation           = [[self parent] convertToNodeSpace:touchLocation];         // Convert to the node space of this class
 
-    return CGRectContainsPoint([self boundingBox], touchLocation);
+    return [self isPointInside:touchLocation];
 }
 
 #elif __MAC_OS_X_VERSION_MAX_ALLOWED
@@ -343,7 +406,7 @@
     CGPoint eventLocation   = [[CCDirector sharedDirector] convertEventToGL:event];
     eventLocation           = [[self parent] convertToNodeSpace:eventLocation];
 
-    return CGRectContainsPoint([self boundingBox], eventLocation);
+    return [self isPointInside:eventLocation];
 }
 
 #endif
@@ -410,7 +473,8 @@
     // If the selector accept the sender as third argument
     if ([sig numberOfArguments] >= 3)
     {
-        [invocation setArgument:&self atIndex:2];
+        CCControl *me   = self;
+        [invocation setArgument:&me atIndex:2];
     }
     
     // If the selector accept the CCControlEvent as fourth argument
@@ -428,14 +492,14 @@
     NSNumber *controlEventKey = [NSNumber numberWithUnsignedInteger:controlEvent];
     
     // Get the invocation list for the  dispatch table
-    NSMutableArray *invocationList = [dispatchTable_ objectForKey:controlEventKey];
+    NSMutableArray *invocationList = [_dispatchTable objectForKey:controlEventKey];
     
     // If the invocation list does not exist for the  dispatch table, we create it
     if (invocationList == nil)
     {
         invocationList = [NSMutableArray arrayWithCapacity:1];
         
-        [dispatchTable_ setObject:invocationList forKey:controlEventKey];
+        [_dispatchTable setObject:invocationList forKey:controlEventKey];
     }
     
     return invocationList;
@@ -468,12 +532,12 @@
     if (block)
     {
         // Think to copy and release the block
-        CCControlBlock currentBlock = [block copy];
-        [dispatchBlockTable_ setObject:currentBlock forKey:controlEventKey];
-        [currentBlock release];
+        CCControlBlock currentBlock = SAFE_ARC_BLOCK_COPY(block);
+        [_dispatchBlockTable setObject:currentBlock forKey:controlEventKey];
+        SAFE_ARC_BLOCK_RELEASE(currentBlock);
     } else
     {
-        [dispatchBlockTable_ removeObjectForKey:controlEventKey];
+        [_dispatchBlockTable removeObjectForKey:controlEventKey];
     }
 }
 

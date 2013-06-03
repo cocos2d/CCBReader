@@ -12,46 +12,56 @@
 
 /**
  * A 9-slice sprite for cocos2d.
+ *
+ * 9-slice scaling allows you to specify how scaling is applied
+ * to specific areas of a sprite. With 9-slice scaling (3x3 grid),
+ * you can ensure that the sprite does not become distorted when
+ * scaled.
+ *
+ * @see http://yannickloriot.com/library/ios/cccontrolextension/Classes/CCScale9Sprite.html
  */
 @interface CCScale9Sprite : CCNode <CCRGBAProtocol>
 {
 @public
-    CGSize              originalSize_;
-    CGSize              preferedSize_;
-    CGRect              capInsets_;
+    CGSize              _originalSize;
+    CGSize              _preferredSize;
+    CGRect              _capInsets;
     
-    float               insetLeft_;
-    float               insetTop_;
-    float               insetRight_;
-    float               insetBottom_;
+    float               _insetLeft;
+    float               _insetTop;
+    float               _insetRight;
+    float               _insetBottom;
+    
+    // CCRGBAProtocol
+    GLubyte             _opacity, _displayedOpacity, _realOpacity;
+    ccColor3B           _color, _displayedColor, _realColor;
+    BOOL                _opacityModifyRGB, _cascadeOpacityEnabled, _cascadeColorEnabled;
     
 @protected
-    CGRect              spriteRect;
-    BOOL                spriteFrameRotated_;
-    CGRect              capInsetsInternal_;
-    BOOL                positionsAreDirty_;
+    CGRect              _spriteRect;
+    BOOL                _spriteFrameRotated;
+    CGRect              _capInsetsInternal;
+    BOOL                _positionsAreDirty;
     
-    CCSpriteBatchNode   *scale9Image;
-    CCSprite            *topLeft;
-    CCSprite            *top;
-    CCSprite            *topRight;
-    CCSprite            *left;
-    CCSprite            *centre;
-    CCSprite            *right;
-    CCSprite            *bottomLeft;
-    CCSprite            *bottom;
-    CCSprite            *bottomRight;
-    BOOL                spritesGenerated_;
-    
-    // texture RGBA
-    GLubyte             opacity_;
-    ccColor3B           color_;
-    BOOL                opacityModifyRGB_;
+    CCSpriteBatchNode   *_scale9Image;
+    CCSprite            *_topLeft;
+    CCSprite            *_top;
+    CCSprite            *_topRight;
+    CCSprite            *_left;
+    CCSprite            *_centre;
+    CCSprite            *_right;
+    CCSprite            *_bottomLeft;
+    CCSprite            *_bottom;
+    CCSprite            *_bottomRight;
+    BOOL                _spritesGenerated;
 }
+/** @name Setting the Default Sizes */
 /** Original sprite's size. */
 @property (nonatomic, readonly) CGSize originalSize;
-/** Prefered sprite's size. By default the prefered size is the original size. */
-@property (nonatomic, assign) CGSize preferedSize;
+/** Preferred sprite's size. By default the preferred size is the original size. */
+@property (nonatomic, assign) CGSize preferredSize;
+
+/** @name 3x3 Grid Attributes */
 /** 
  * The end-cap insets. 
  * On a non-resizeable sprite, this property is set to CGRectZero; the sprite 
@@ -67,14 +77,24 @@
 /** Sets the bottom side inset */
 @property(nonatomic, assign) float insetBottom;
 
-/** Conforms to CocosNodeRGBA protocol. */
+/** @name RGBA Protocol Properties */
+/** Conforms to CCRGBAProtocol protocol. */
 @property (nonatomic, readwrite) GLubyte opacity;
-/** Conforms to CocosNodeRGBA protocol. */
+/** Conforms to CCRGBAProtocol (v2.1) protocol. */
+@property (nonatomic, readonly) GLubyte displayedOpacity;
+/** Conforms to CCRGBAProtocol protocol. */
 @property (nonatomic, readwrite) ccColor3B color;
-/** Conforms to CocosNodeRGBA protocol. */
+/** Conforms to CCRGBAProtocol (v2.1) protocol. */
+@property (nonatomic, readonly) ccColor3B displayedColor;
+/** Conforms to CCRGBAProtocol protocol. */
 @property (nonatomic, getter = doesOpacityModifyRGB) BOOL opacityModifyRGB;
+/** Conforms to CCRGBAProtocol (v2.1) protocol. */
+@property (nonatomic, getter = isCascadeColorEnabled) BOOL cascadeColorEnabled;
+/** Conforms to CCRGBAProtocol (v2.1) protocol. */
+@property (nonatomic, getter = isCascadeOpacityEnabled) BOOL cascadeOpacityEnabled;
 
 #pragma mark Constructor - Initializers
+/** @name Create 9-Scale Sprites */
 
 /**
  * Initializes a 9-slice sprite with a texture file, a delimitation zone and
@@ -246,6 +266,7 @@
 + (id)spriteWithSpriteFrameName:(NSString *)spriteFrameName;
 
 #pragma mark Public Methods
+/** @name Modifying the 3x3 Grid */
 
 /**
  * Creates and returns a new sprite object with the specified cap insets.
@@ -257,11 +278,12 @@
  */
 - (CCScale9Sprite *)resizableSpriteWithCapInsets:(CGRect)capInsets;
 
+/** @name Changing the Appearance */
 /**
  * Sets the sprite frame used to display the 9-slice sprite.
  *
  * @param spriteFrame The new sprite frame.
  */
-- (void) setSpriteFrame:(CCSpriteFrame*) spriteFrame;
+- (void)setSpriteFrame:(CCSpriteFrame *)spriteFrame;
 
 @end

@@ -32,6 +32,7 @@
 #import "CCControl.h"
 #import "CCControlButton.h"
 #import "CCControlColourPicker.h"
+#import "CCControlPicker.h"
 #import "CCControlPotentiometer.h"
 #import "CCControlSlider.h"
 #import "CCControlStepper.h"

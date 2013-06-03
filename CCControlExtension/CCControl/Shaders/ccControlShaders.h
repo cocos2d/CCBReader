@@ -1,22 +1,19 @@
 /*
- * CCControlSaturationBrightnessPicker.h
+ * ccControlShaders.h
  *
- * Copyright 2012 Stewart Hamilton-Arrandale.
- * http://creativewax.co.uk
- *
- * Modified by Yannick Loriot.
+ * Copyright 2013 Yannick Loriot.
  * http://yannickloriot.com
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,37 +24,12 @@
  *
  */
 
-#import "CCControl.h"
+#ifdef __cplusplus__
+extern "C" {
+#endif // __cplusplus__
 
-#import "CCColourUtils.h"
-
-@interface CCControlSaturationBrightnessPicker : CCControl
-{
-@public
-    CGFloat     saturation_, brightness_;
+extern const GLchar * ccControlSwitchMask_frag;
     
-@protected
-    CCSprite    *background_;
-    CCSprite    *overlay_;
-    CCSprite    *shadow_;
-    CCSprite    *slider_;
-    CGPoint     startPos;
-    
-    int         boxPos;
-    int         boxSize;
+#ifdef __cplusplus__
 }
-/** Contains the receiver’s current saturation value. */
-@property (nonatomic, assign) CGFloat saturation;
-/** Contains the receiver’s current brightness value. */
-@property (nonatomic, assign) CGFloat brightness;
-
-#pragma mark - Constuctors - Initializers
-
-- (id)initWithTarget:(id)target withPos:(CGPoint)pos;
-
-#pragma mark - Public Methods
-
-- (void)updateWithHSV:(HSV)hsv;
-- (void)updateDraggerWithHSV:(HSV)hsv;
-
-@end
+#endif // __cplusplus__

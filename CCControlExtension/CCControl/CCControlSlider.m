@@ -3,17 +3,17 @@
  *
  * Copyright 2011 Yannick Loriot.
  * http://yannickloriot.com
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,11 +25,13 @@
  */
 
 #import "CCControlSlider.h"
+#import "ARCMacro.h"
 
-@interface CCControlSlider () 
-@property (nonatomic, retain) CCSprite  *thumbSprite;
-@property (nonatomic, retain) CCSprite  *progressSprite;
-@property (nonatomic, retain) CCSprite  *backgroundSprite;
+@interface CCControlSlider ()
+@property (nonatomic, strong) CCSprite  *thumbSprite;
+@property (nonatomic, strong) CCSprite  *progressSprite;
+@property (nonatomic, strong) CCSprite  *backgroundSprite;
+@property (nonatomic, assign) float     animatedValue;
 
 /** Factorize the event dispath into these methods. */
 - (void)sliderBegan:(CGPoint)location;
@@ -39,23 +41,28 @@
 /** Returns the value for the given location. */
 - (float)valueForLocation:(CGPoint)location;
 
+/** Layout the slider with the given value. */
+- (void)layoutWithValue:(float)value;
+
 @end
 
 @implementation CCControlSlider
-@synthesize thumbSprite         = thumbSprite_;
-@synthesize progressSprite      = progressSprite_;
-@synthesize backgroundSprite    = backgroundSprite_;
-@synthesize value               = value_;
-@synthesize minimumValue        = minimumValue_;
-@synthesize maximumValue        = maximumValue_;
+@synthesize thumbSprite         = _thumbSprite;
+@synthesize progressSprite      = _progressSprite;
+@synthesize backgroundSprite    = _backgroundSprite;
+@synthesize animatedValue       = _animatedValue;
+@synthesize value               = _value;
+@synthesize minimumValue        = _minimumValue;
+@synthesize maximumValue        = _maximumValue;
+@synthesize onThumbTintColor    = _onThumbTintColor;
 
 - (void)dealloc
 {
-    [thumbSprite_       release];
-    [progressSprite_    release];
-    [backgroundSprite_  release];
+    SAFE_ARC_RELEASE(_thumbSprite);
+    SAFE_ARC_RELEASE(_progressSprite);
+    SAFE_ARC_RELEASE(_backgroundSprite);
     
-    [super              dealloc];
+    SAFE_ARC_SUPER_DEALLOC();
 }
 
 + (id)sliderWithBackgroundFile:(NSString *)backgroundname progressFile:(NSString *)progressname thumbFile:(NSString *)thumbname
@@ -69,22 +76,22 @@
 	// Prepare thumb for slider
     CCSprite *thumbSprite       = [CCSprite spriteWithFile:thumbname];
     
-    return [self sliderWithBackgroundSprite:backgroundSprite 
+    return [self sliderWithBackgroundSprite:backgroundSprite
                              progressSprite:progressSprite
                                 thumbSprite:thumbSprite];
 }
 
 + (id)sliderWithBackgroundSprite:(CCSprite *)backgroundSprite progressSprite:(CCSprite *)pogressSprite thumbSprite:(CCSprite *)thumbSprite
 {
-    return [[[self alloc] initWithBackgroundSprite:backgroundSprite
-                                    progressSprite:pogressSprite
-                                       thumbSprite:thumbSprite] autorelease];
+    return SAFE_ARC_AUTORELEASE([[self alloc] initWithBackgroundSprite:backgroundSprite
+                                                        progressSprite:pogressSprite
+                                                           thumbSprite:thumbSprite]);
 }
 
 // Designated init
-- (id)initWithBackgroundSprite:(CCSprite *)backgroundSprite progressSprite:(CCSprite *)progressSprite thumbSprite:(CCSprite *)thumbSprite  
-{  
-    if ((self = [super init]))  
+- (id)initWithBackgroundSprite:(CCSprite *)backgroundSprite progressSprite:(CCSprite *)progressSprite thumbSprite:(CCSprite *)thumbSprite
+{
+    if ((self = [super init]))
     {
         NSAssert(backgroundSprite,  @"Background sprite must be not nil");
         NSAssert(progressSprite,    @"Progress sprite must be not nil");
@@ -97,29 +104,30 @@
         self.thumbSprite                = thumbSprite;
         
         // Defines the content size
-        CGRect maxRect                  = CGRectUnion([backgroundSprite_ boundingBox], [thumbSprite_ boundingBox]);
+        CGRect maxRect                  = CGRectUnion([_backgroundSprite boundingBox], [_thumbSprite boundingBox]);
         self.contentSize                = CGSizeMake(maxRect.size.width, maxRect.size.height);
         
-		// Add the slider background 
-        backgroundSprite_.anchorPoint   = ccp (0.5f, 0.5f);
-		backgroundSprite_.position      = ccp(self.contentSize.width / 2, self.contentSize.height / 2);
-		[self addChild:backgroundSprite_];
+		// Add the slider background
+        _backgroundSprite.anchorPoint   = ccp (0.5f, 0.5f);
+		_backgroundSprite.position      = ccp(self.contentSize.width / 2, self.contentSize.height / 2);
+		[self addChild:_backgroundSprite];
         
         // Add the progress bar
-        progressSprite_.anchorPoint     = ccp (0.0f, 0.5f);
-        progressSprite_.position        = ccp (0.0f, self.contentSize.height / 2);
-        [self addChild:progressSprite_];
+        _progressSprite.anchorPoint     = ccp (0.0f, 0.5f);
+        _progressSprite.position        = ccp (0.0f, self.contentSize.height / 2);
+        [self addChild:_progressSprite];
 		
-		// Add the slider thumb  
-		thumbSprite_.position           = ccp(0, self.contentSize.height / 2);  
-		[self addChild:thumbSprite_];
+		// Add the slider thumb
+		_thumbSprite.position           = ccp(0, self.contentSize.height / 2);
+		[self addChild:_thumbSprite];
         
         // Init default values
-        minimumValue_                   = 0.0f;
-        maximumValue_                   = 1.0f;
-        self.value                      = minimumValue_;
-    }  
-    return self;  
+        _onThumbTintColor               = ccGRAY;
+        _minimumValue                   = 0.0f;
+        _maximumValue                   = 1.0f;
+        self.value                      = _minimumValue;
+    }
+    return self;
 }
 
 #pragma mark Properties
@@ -128,51 +136,41 @@
 {
     super.enabled           = enabled;
     
-    thumbSprite_.opacity    = (enabled) ? 255.0f : 128.0f;
+    _thumbSprite.opacity    = (enabled) ? 255.0f : 128.0f;
 }
 
 - (void)setValue:(float)value
 {
-	// set new value with sentinel
-    if (value < minimumValue_)
-    {
-		value           = minimumValue_;
-    }
-	
-    if (value > maximumValue_) 
-    {
-		value           = maximumValue_;
-    }
-    
-    value_              = value;
-	
-    [self needsLayout];
-    
-    [self sendActionsForControlEvents:CCControlEventValueChanged];
+    [self setValue:value animated:NO];
+}
+
+- (void)setAnimatedValue:(float)animatedValue
+{
+    [self layoutWithValue:animatedValue];
 }
 
 - (void)setMinimumValue:(float)minimumValue
 {
-    minimumValue_       = minimumValue;
+    _minimumValue       = minimumValue;
     
-    if (minimumValue_ >= maximumValue_)
+    if (_minimumValue >= _maximumValue)
     {
-        maximumValue_   = minimumValue_ + 1.0f;
+        _maximumValue   = _minimumValue + 1.0f;
     }
     
-    self.value          = maximumValue_;
+    self.value          = _maximumValue;
 }
 
 - (void)setMaximumValue:(float)maximumValue
 {
-    maximumValue_       = maximumValue;
+    _maximumValue       = maximumValue;
     
-    if (maximumValue_ <= minimumValue_)
+    if (_maximumValue <= _minimumValue)
     {
-        minimumValue_   = maximumValue_ - 1.0f;
+        _minimumValue   = _maximumValue - 1.0f;
     }
     
-    self.value          = minimumValue_;
+    self.value          = _minimumValue;
 }
 
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
@@ -184,8 +182,8 @@
     touchLocation           = [[self parent] convertToNodeSpace:touchLocation];
     
     CGRect rect             = [self boundingBox];
-    rect.size.width         += thumbSprite_.contentSize.width;
-    rect.origin.x           -= thumbSprite_.contentSize.width / 2;
+    rect.size.width         += _thumbSprite.contentSize.width;
+    rect.origin.x           -= _thumbSprite.contentSize.width / 2;
     
     return CGRectContainsPoint(rect, touchLocation);
 }
@@ -199,9 +197,9 @@
     if (touchLocation.x < 0)
     {
         touchLocation.x     = 0;
-    } else if (touchLocation.x > backgroundSprite_.contentSize.width)
+    } else if (touchLocation.x > _backgroundSprite.contentSize.width)
     {
-        touchLocation.x     = backgroundSprite_.contentSize.width;
+        touchLocation.x     = _backgroundSprite.contentSize.width;
     }
     
     return touchLocation;
@@ -210,7 +208,9 @@
 - (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event
 {
     if (![self isTouchInside:touch]
-        || ![self isEnabled])
+        || ![self isEnabled]
+        || ![self visible]
+        || ![self hasVisibleParents])
     {
         return NO;
     }
@@ -244,8 +244,8 @@
     eventLocation           = [[self parent] convertToNodeSpace:eventLocation];
     
     CGRect rect             = [self boundingBox];
-    rect.size.width         += thumbSprite_.contentSize.width;
-    rect.origin.x           -= thumbSprite_.contentSize.width / 2;
+    rect.size.width         += _thumbSprite.contentSize.width;
+    rect.origin.x           -= _thumbSprite.contentSize.width / 2;
     
     return CGRectContainsPoint(rect, eventLocation);
 }
@@ -258,9 +258,9 @@
     if (eventLocation.x < 0)
     {
         eventLocation.x = 0;
-    } else if (eventLocation.x > backgroundSprite_.contentSize.width)
+    } else if (eventLocation.x > _backgroundSprite.contentSize.width)
     {
-        eventLocation.x = backgroundSprite_.contentSize.width;
+        eventLocation.x = _backgroundSprite.contentSize.width;
     }
     
 	return eventLocation;
@@ -269,7 +269,9 @@
 - (BOOL)ccMouseDown:(NSEvent*)event
 {
     if (![self isMouseInside:event]
-        || ![self isEnabled])
+        || ![self isEnabled]
+        || ![self visible]
+        || ![self hasVisibleParents])
     {
         return NO;
     }
@@ -311,17 +313,30 @@
 
 - (void)needsLayout
 {
-    // Update thumb position for new value
-    float percent               = (value_ - minimumValue_) / (maximumValue_ - minimumValue_);
+    [self layoutWithValue:_value];
+}
+
+- (void)setValue:(float)value animated:(BOOL)animated
+{
+    // Set new value with sentinel
+    if (value < _minimumValue)
+		value           = _minimumValue;
+	
+    if (value > _maximumValue)
+		value           = _maximumValue;
     
-    CGPoint pos                 = thumbSprite_.position;
-    pos.x                       = percent * backgroundSprite_.contentSize.width;
-    thumbSprite_.position       = pos;
+    if (animated)
+    {
+        [self runAction:
+         [CCEaseInOut actionWithAction:[CCActionTween actionWithDuration:0.2f key:@"animatedValue" from:_value to:value]
+                                  rate:1.5f]];
+    } else
+    {
+        [self layoutWithValue:value];
+    }
     
-    // Stretches content proportional to newLevel
-    CGRect textureRect          = progressSprite_.textureRect;
-    textureRect                 = CGRectMake(textureRect.origin.x, textureRect.origin.y, pos.x, textureRect.size.height);
-    [progressSprite_ setTextureRect:textureRect rotated:progressSprite_.textureRectRotated untrimmedSize:textureRect.size];
+    _value              = value;
+    [self sendActionsForControlEvents:CCControlEventValueChanged];
 }
 
 #pragma mark CCControlSlider Private Methods
@@ -329,7 +344,7 @@
 - (void)sliderBegan:(CGPoint)location
 {
     self.selected           = YES;
-    self.thumbSprite.color  = ccGRAY;
+    self.thumbSprite.color  = _onThumbTintColor;
     self.value              = [self valueForLocation:location];
 }
 
@@ -342,7 +357,7 @@
 {
     if ([self isSelected])
     {
-        self.value          = [self valueForLocation:thumbSprite_.position];
+        self.value          = [self valueForLocation:_thumbSprite.position];
     }
     
     self.thumbSprite.color  = ccWHITE;
@@ -351,8 +366,23 @@
 
 - (float)valueForLocation:(CGPoint)location
 {
-    float percent           = location.x / backgroundSprite_.contentSize.width;
-    return minimumValue_ + percent * (maximumValue_ - minimumValue_);
+    float percent           = location.x / _backgroundSprite.contentSize.width;
+    return _minimumValue + percent * (_maximumValue - _minimumValue);
+}
+
+- (void)layoutWithValue:(float)value
+{
+    // Update thumb position for new value
+    float percent               = (value - _minimumValue) / (_maximumValue - _minimumValue);
+    
+    CGPoint pos                 = _thumbSprite.position;
+    pos.x                       = percent * _backgroundSprite.contentSize.width;
+    _thumbSprite.position       = pos;
+    
+    // Stretches content proportional to newLevel
+    CGRect textureRect          = _progressSprite.textureRect;
+    textureRect                 = CGRectMake(textureRect.origin.x, textureRect.origin.y, pos.x, textureRect.size.height);
+    [_progressSprite setTextureRect:textureRect rotated:_progressSprite.textureRectRotated untrimmedSize:textureRect.size];
 }
 
 @end
