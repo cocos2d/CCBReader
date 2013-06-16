@@ -39,6 +39,21 @@ enum positions
 @synthesize insetRight          = insetRight_;
 @synthesize preferedSize        = preferedSize_;
 
+@synthesize displayedOpacity;
+@synthesize cascadeOpacityEnabled;
+@synthesize displayedColor;
+@synthesize cascadeColorEnabled;
+
+- (void)updateDisplayedColor:(ccColor3B)color
+{
+    // Nothing to do
+}
+
+- (void)updateDisplayedOpacity:(GLubyte)opacity
+{
+    // Nothing to do
+}
+
 - (void)dealloc
 {
     [topLeft        release];

@@ -120,6 +120,20 @@
 @synthesize opacity                 = opacity_;
 @synthesize color                   = color_;
 @synthesize opacityModifyRGB        = opacityModifyRGB_;
+@synthesize displayedColor;
+@synthesize cascadeColorEnabled;
+@synthesize displayedOpacity;
+@synthesize cascadeOpacityEnabled;
+
+- (void)updateDisplayedColor:(ccColor3B)color
+{
+    // Nothing to do
+}
+
+- (void)updateDisplayedOpacity:(GLubyte)opacity
+{
+    // Nothing to do
+}
 
 - (void)dealloc
 {
@@ -135,7 +149,7 @@
     {
 #ifdef __IPHONE_OS_VERSION_MAX_ALLOWED
 		// Enabled the touch event
-        self.isTouchEnabled         = YES;
+        [self setTouchEnabled:YES];
 #elif __MAC_OS_X_VERSION_MAX_ALLOWED
         // Enabled the mouse event
 		self.mouseEnabled         = YES;
