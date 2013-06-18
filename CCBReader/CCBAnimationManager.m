@@ -510,10 +510,8 @@ static NSInteger ccbAnimationManagerID = 0;
     return [CCSequence actionWithArray:actions];
 }
 
-- (void) runAnimationsForSequenceId:(int)seqId tweenDuration:(float) tweenDuration
+- (void) stopRunningAnimation
 {
-    NSAssert(seqId != -1, @"Sequence id %d couldn't be found",seqId);
-    
     // Stop actions associated with this animation manager
     [self removeActionsByTag:animationManagerId fromNode:rootNode];
     
@@ -523,7 +521,18 @@ static NSInteger ccbAnimationManagerID = 0;
         
         // Stop actions associated with this animation manager
         [self removeActionsByTag:animationManagerId fromNode:node];
-        
+    }
+}
+
+- (void) runAnimationsForSequenceId:(int)seqId tweenDuration:(float) tweenDuration
+{
+    NSAssert(seqId != -1, @"Sequence id %d couldn't be found",seqId);
+    [self stopRunningAnimation];
+
+    for (NSValue* nodePtr in nodeSequences)
+    {
+        CCNode* node = [nodePtr pointerValue];
+
         NSDictionary* seqs = [nodeSequences objectForKey:nodePtr];
         NSDictionary* seqNodeProps = [seqs objectForKey:[NSNumber numberWithInt:seqId]];
         
