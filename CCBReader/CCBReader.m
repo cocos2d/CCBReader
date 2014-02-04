@@ -220,7 +220,7 @@
 - (void) readPropertyForNode:(CCNode*) node parent:(CCNode*)parent isExtraProp:(BOOL)isExtraProp
 {
     // Read type and property name
-    int type = [self readIntWithSign:NO];
+    int prop_type = [self readIntWithSign:NO];
     NSString* name = [self readCachedString];
     
     // Check if the property can be set for this platform
@@ -259,7 +259,7 @@
         [extraPropNames addObject:name];
     }
     
-    if (type == kCCBPropTypePosition)
+    if (prop_type == kCCBPropTypePosition)
     {
         float x = [self readFloat];
         float y = [self readFloat];
@@ -284,8 +284,8 @@
             }
         }
     }
-    else if(type == kCCBPropTypePoint
-            || type == kCCBPropTypePointLock)
+    else if(prop_type == kCCBPropTypePoint
+            || prop_type == kCCBPropTypePointLock)
     {
         float x = [self readFloat];
         float y = [self readFloat];
@@ -300,7 +300,7 @@
 #endif
         }
     }
-    else if (type == kCCBPropTypeSize)
+    else if (prop_type == kCCBPropTypeSize)
     {
         float w = [self readFloat];
         float h = [self readFloat];
@@ -314,7 +314,7 @@
             [node setRelativeSize:size type:type parentSize:containerSize propertyName:name];
         }
     }
-    else if (type == kCCBPropTypeScaleLock)
+    else if (prop_type == kCCBPropTypeScaleLock)
     {
         float x = [self readFloat];
         float y = [self readFloat];
@@ -335,7 +335,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeFloatXY)
+    else if (prop_type == kCCBPropTypeFloatXY)
     {
         float xFloat = [self readFloat];
         float yFloat = [self readFloat];
@@ -348,8 +348,8 @@
             [node setValue:[NSNumber numberWithFloat:yFloat] forKey:nameY];
         }
     }
-    else if (type == kCCBPropTypeDegrees
-             || type == kCCBPropTypeFloat)
+    else if (prop_type == kCCBPropTypeDegrees
+             || prop_type == kCCBPropTypeFloat)
     {
         float f = [self readFloat];
         
@@ -364,7 +364,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeFloatScale)
+    else if (prop_type == kCCBPropTypeFloatScale)
     {
         float f = [self readFloat];
         int type = [self readIntWithSign:NO];
@@ -374,8 +374,8 @@
             [node setRelativeFloat:f type:type propertyName:name];
         }
     }
-    else if (type == kCCBPropTypeInteger
-             || type == kCCBPropTypeIntegerLabeled)
+    else if (prop_type == kCCBPropTypeInteger
+             || prop_type == kCCBPropTypeIntegerLabeled)
     {
         int d = [self readIntWithSign:YES];
         
@@ -384,7 +384,7 @@
             [node setValue:[NSNumber numberWithInt:d] forKey:name];
         }
     }
-    else if (type == kCCBPropTypeFloatVar)
+    else if (prop_type == kCCBPropTypeFloatVar)
     {
         float f = [self readFloat];
         float fVar = [self readFloat];
@@ -396,7 +396,7 @@
             [node setValue:[NSNumber numberWithFloat:fVar] forKey:nameVar];
         }
     }
-    else if (type == kCCBPropTypeCheck)
+    else if (prop_type == kCCBPropTypeCheck)
     {
         BOOL b = [self readBool];
         
@@ -411,7 +411,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeSpriteFrame)
+    else if (prop_type == kCCBPropTypeSpriteFrame)
     {
         NSString* spriteSheet = [self readCachedString];
         NSString* spriteFile = [self readCachedString];
@@ -446,7 +446,7 @@
             }
         }
     }
-	else if(type == kCCBPropTypeAnimation)
+	else if(prop_type == kCCBPropTypeAnimation)
     {
         NSString* animationFile = [self readCachedString];
         NSString* animation = [self readCachedString];
@@ -472,7 +472,7 @@
             [node setValue:pAnimation forKey:name];
         }
     }
-    else if (type == kCCBPropTypeTexture)
+    else if (prop_type == kCCBPropTypeTexture)
     {
         NSString* spriteFile = [self readCachedString];
         
@@ -482,7 +482,7 @@
             [node setValue:texture forKey:name];
         }
     }
-    else if (type == kCCBPropTypeByte)
+    else if (prop_type == kCCBPropTypeByte)
     {
         int byte = [self readByte];
         
@@ -497,7 +497,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeColor3)
+    else if (prop_type == kCCBPropTypeColor3)
     {
         int r = [self readByte];
         int g = [self readByte];
@@ -515,7 +515,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeColor4FVar)
+    else if (prop_type == kCCBPropTypeColor4FVar)
     {
         float r = [self readFloat];
         float g = [self readFloat];
@@ -537,7 +537,7 @@
             [node setValue:cVarVal forKey:nameVar];
         }
     }
-    else if (type == kCCBPropTypeFlip)
+    else if (prop_type == kCCBPropTypeFlip)
     {
         BOOL xFlip = [self readBool];
         BOOL yFlip = [self readBool];
@@ -550,7 +550,7 @@
             [node setValue:[NSNumber numberWithBool:yFlip] forKey:nameY];
         }
     }
-    else if (type == kCCBPropTypeBlendmode)
+    else if (prop_type == kCCBPropTypeBlendmode)
     {
         int src = [self readIntWithSign:NO];
         int dst = [self readIntWithSign:NO];
@@ -564,13 +564,13 @@
             [node setValue:blendVal forKey:name];
         }
     }
-    else if (type == kCCBPropTypeFntFile)
+    else if (prop_type == kCCBPropTypeFntFile)
     {
         NSString* fntFile = [self readCachedString];
         [node setValue:fntFile forKey:name];
     }
-    else if (type == kCCBPropTypeText
-             || type == kCCBPropTypeString)
+    else if (prop_type == kCCBPropTypeText
+             || prop_type == kCCBPropTypeString)
     {
         NSString* txt = [self readCachedString];
         
@@ -579,7 +579,7 @@
             [node setValue:txt forKey:name];
         }
     }
-    else if (type == kCCBPropTypeFontTTF)
+    else if (prop_type == kCCBPropTypeFontTTF)
     {
         NSString* fnt = [self readCachedString];
         
@@ -592,7 +592,7 @@
             [node setValue:fnt forKey:name];
         }
     }
-    else if (type == kCCBPropTypeBlock)
+    else if (prop_type == kCCBPropTypeBlock)
     {
         NSString* selectorName = [self readCachedString];
         int selectorTarget = [self readIntWithSign:NO];
@@ -655,7 +655,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeBlockCCControl)
+    else if (prop_type == kCCBPropTypeBlockCCControl)
     {
         NSString* selectorName = [self readCachedString];
         int selectorTarget = [self readIntWithSign:NO];
@@ -691,7 +691,7 @@
             }
         }
     }
-    else if (type == kCCBPropTypeCCBFile)
+    else if (prop_type == kCCBPropTypeCCBFile)
     {
         NSString* ccbFileName = [self readCachedString];
         
@@ -737,7 +737,7 @@
     }
     else
     {
-        NSLog(@"CCBReader: Failed to read property type %d",type);
+        NSLog(@"CCBReader: Failed to read property type %d",prop_type);
     }
 }
 

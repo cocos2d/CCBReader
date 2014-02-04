@@ -823,7 +823,7 @@ static NSInteger ccbAnimationManagerID = 0;
 @implementation CCEaseInstant
 -(void) update: (ccTime) t
 {
-    if (t < 0)
+    if (t < 1)
     {
         [self.inner update:0];
     }
