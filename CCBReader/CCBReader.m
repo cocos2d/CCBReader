@@ -1142,7 +1142,7 @@
     }
 }
 
-- (CCNode*) readFileWithCleanUp:(BOOL)cleanUp actionManagers:(NSMutableDictionary*)am
+- (CCNode*) readFileWithCleanUp:(BOOL)cleanUp actionManagers:(NSMutableArray*)am
 {
     if (![self readHeader]) return NULL;
     if (![self readStringCache]) return NULL;
@@ -1152,7 +1152,10 @@
     
     CCNode* node = [self readNodeGraphParent:NULL];
     
-    [actionManagers setObject:self.actionManager forKey:[NSValue valueWithPointer:node]];
+    [actionManagers addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                               self.actionManager, @"manager",
+                               node, @"node",
+                               nil]];
     
     if (cleanUp)
     {
@@ -1194,7 +1197,7 @@
     ownerCallbackNames = [[NSMutableArray alloc] init];
     ownerCallbackNodes = [[NSMutableArray alloc] init];
     
-    NSMutableDictionary* animationManagers = [NSMutableDictionary dictionary];
+    NSMutableArray* animationManagers = [NSMutableArray array];
     CCNode* nodeGraph = [self readFileWithCleanUp:YES actionManagers:animationManagers];
     
     if (nodeGraph && self.actionManager.autoPlaySequenceId != -1 && !jsControlled)
@@ -1209,11 +1212,11 @@
         nodesWithAnimationManagers = [[NSMutableArray alloc] init];
         animationManagersForNodes = [[NSMutableArray alloc] init];
     }
-    for (NSValue* pointerValue in animationManagers)
+    for (NSDictionary *dict in animationManagers)
     {
-        CCNode* node = [pointerValue pointerValue];
+        CCNode* node = [dict objectForKey:@"node"];
         
-        CCBAnimationManager* manager = [animationManagers objectForKey:pointerValue];
+        CCBAnimationManager* manager = [dict objectForKey:@"manager"];
         node.userObject = manager;
         
         if (jsControlled)

@@ -119,7 +119,7 @@ enum
     id owner;
     
     CCBAnimationManager* actionManager;
-    NSMutableDictionary* actionManagers;
+    NSMutableArray* actionManagers;
     NSMutableSet* animatedProps;
     
     // For JavaScript bindings
