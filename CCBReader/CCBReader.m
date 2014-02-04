@@ -953,6 +953,15 @@
             if (target)
             {
                 Ivar ivar = class_getInstanceVariable([target class],[memberVarAssignmentName UTF8String]);
+                
+                if( !ivar )
+                {
+                    // look for '_' variant (supports Apple's new autosynth properties)
+                    NSString* autoSynthMemberVarAssignmentName = [NSString stringWithFormat:@"_%@", memberVarAssignmentName];
+                    
+                    ivar = class_getInstanceVariable([target class],[autoSynthMemberVarAssignmentName UTF8String]);
+                }
+                
                 if (ivar)
                 {
                     object_setIvar(target,ivar,node);
