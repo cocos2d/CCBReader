@@ -95,6 +95,7 @@
 - (void) runAnimationsForSequenceNamed:(NSString*)name tweenDuration:(float)tweenDuration;
 - (void) runAnimationsForSequenceNamed:(NSString*)name;
 - (void) runAnimationsForSequenceId:(int)seqId tweenDuration:(float) tweenDuration;
+- (void) stopRunningAnimation;
 
 -(void) setCompletedAnimationCallbackBlock:(void(^)(id sender))b;
 
